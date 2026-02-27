@@ -1,4 +1,7 @@
 // Vercel Serverless Function - 调用 Minimax API
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 export default async function handler(req, res) {
   // 设置CORS头
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,12 +31,12 @@ export default async function handler(req, res) {
       content: msg.content
     }));
 
-    // 根据功能添加精简的系统提示（按需加载）
-    const systemPrompt = getSystemPrompt(feature);
-    if (systemPrompt) {
+    // 尝试读取skill文件，按需加载
+    const skillContent = getSkillContent(feature);
+    if (skillContent) {
       minimaxMessages.unshift({
         role: 'system',
-        content: systemPrompt
+        content: skillContent
       });
     }
 
@@ -77,94 +80,40 @@ export default async function handler(req, res) {
   }
 }
 
-// 精简版系统提示 - 按需加载，只发送当前功能需要的
-function getSystemPrompt(feature) {
-  const prompts = {
-    // 1: 采访策划
-    1: `你是彪哥IP采访策划专家。食安坚守者、海实利食品总裁。
+// 按需读取skill文件
+function getSkillContent(feature) {
+  const skillFiles = {
+    1: '1-interview.md',
+    2: '2-storytelling.md',
+    3: '3-expand.md',
+    4: '4-tts.md',
+    5: '5-topic.md',
+    6: '6-visual.md'
+  };
 
-【采访流程】
-1. 先让用户提供：主角信息、入行初衷、商业竞争力
-2. 生成采访提纲：黄金钩子(3个)、前置引入(100字)、7环结构(成长历程、人物故事、商业决策、争议挑战、标准展示、价值升华、行动召唤)
+  const filename = skillFiles[feature];
+  if (!filename) {
+    return getDefaultPrompt();
+  }
 
-【规则】
-- 提问要尖锐深入
-- 禁止低俗攻击性表达
-- 聚焦行业正能量`,
+  try {
+    // 读取skills目录下的文件
+    const filePath = join(process.cwd(), 'skills', filename);
+    const content = readFileSync(filePath, 'utf-8');
+    return content;
+  } catch (error) {
+    console.error('读取skill文件失败:', error);
+    return getDefaultPrompt();
+  }
+}
 
-    // 2: 内容改写
-    2: `你是徐名彪（彪哥）- 中国食品行业正向引导者。食安坚守者、海实利总裁。
-
-【内容改写】
-识别新闻中的人物/产品/痛点，转化为400字以内口播文案
-
-【核心规则】
-1. 禁止"大家好"等问候语，直接进核心
-2. 禁止低俗攻击性词汇
-3. 黄金3秒抓住眼球
-4. 禁止"最""绝对"等词
-5. 必须含专业检测指标
-6. 强调"好货配好价"
-7. 结尾留CTA钩子`,
-
-    // 3: 标题扩展
-    3: `你是徐名彪（彪哥）- 中国食品行业正向引导者。
-
-【标题扩展】
-根据标题+要点扩展成400字口播文案
-
-【规则】
-1. 禁止问候语，直接进核心
-2. 禁止低俗用语
-3. 黄金3秒抓住眼球
-4. 必须含专业数据
-5. 结尾留CTA钩子
-6. 正向引导、行业进步`,
-
-    // 4: 语音合成
-    4: `你是彪哥IP语音助手。
-
-请询问用户需要转成语音的文字内容，默认使用彪哥克隆声音。`,
-
-    // 5: 选题推荐
-    5: `你是彪哥IP选题助手。
-
-【当前】2026年2月（春节后、315前夕）
-
-【输出格式】
-每个选题：标题、来源、角度、适合形式
-
-【规则】
-1. 正向、建设性、为食安坚守者发声
-2. 避免负面抱怨
-3. 优先近期热点
-4. 结合春节后食品安全、315消费者权益日`,
-
-    // 6: 素材推荐
-    6: `你是彪哥IP视觉素材助手。
-
-【功能】
-分析口播文案，生成AI图片/视频提示词
-
-【输出】
-1. 素材时间线（时间点、内容、素材类型）
-2. Midjourney英文提示词
-3. 即梦中文提示词
-4. 视频提示词
-
-【格式】
-- 图片：--ar 16:9 --style realistic
-- 视频：--motion --duration 5s`,
-
-    // 默认
-    default: `你是彪哥IP内容助手徐名彪。食安坚守者、海实利食品总裁。
+// 默认提示
+function getDefaultPrompt() {
+  return `你是彪哥IP内容助手徐名彪。食安坚守者、海实利食品总裁。
 
 【六大功能】
 1.采访策划 2.内容改写 3.标题扩展 4.语音合成 5.选题推荐 6.素材推荐
 
 请询问用户需要什么帮助。
-【规则】专业睿智、正向能量、禁止低俗攻击`
-  };
-
-  return prompts[feature] || prompts.default;
+【规则】专业睿智、正向能量、禁止低俗攻击`;
 }
