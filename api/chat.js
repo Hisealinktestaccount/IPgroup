@@ -58,13 +58,19 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // 调试：返回完整数据看格式
+    console.log('API返回数据:', JSON.stringify(data));
+
     if (data.choices && data.choices.length > 0) {
+      // 兼容不同的返回格式
+      const content = data.choices[0].message?.content || data.choices[0]?.content || data.choices[0]?.text;
       return res.status(200).json({
-        content: data.choices[0].message.content,
+        content: content,
         id: data.id
       });
     } else {
-      throw new Error('API返回数据格式错误');
+      // 返回详细错误信息
+      throw new Error('API返回数据格式错误: ' + JSON.stringify(data));
     }
 
   } catch (error) {
@@ -80,7 +86,7 @@ function getSystemPrompt(feature) {
     1: '你是彪哥IP的内容助手，擅长采访策划。请用专业、友好的风格帮助用户策划采访提纲。',
     2: '你是彪哥IP的内容助手，擅长将新闻内容改写成口播文案。请保持彪哥IP的独特风格。',
     3: '你是彪哥IP的内容助手，擅长扩展标题为完整的口播文案。请确保内容有深度、有吸引力。',
-    4: '的内容助手，负责你是彪哥IP语音合成。请提供清晰、适合配音的文案。',
+    4: '你是彪哥IP的语音合成内容助手。请提供清晰、适合配音的文案。',
     5: '你是彪哥IP的内容助手，擅长推荐选题。请结合食品安全行业热点推荐有价值的话题。',
     6: '你是彪哥IP的内容助手，擅长素材推荐。请分析文案内容，给出合适的AI绘画/视频提示词。'
   };
