@@ -116,6 +116,22 @@
             color: var(--primary);
         }
 
+        .home-btn {
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .home-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
         /* 主内容区 */
         main {
             flex: 1;
@@ -560,6 +576,7 @@
             <div class="logo-icon">彪</div>
             <div class="logo-text">彪哥<span>IP</span></div>
         </div>
+        <button class="home-btn" id="homeBtn" onclick="resetChat()" style="display:none;">返回首页</button>
     </header>
 
     <div class="page">
@@ -668,9 +685,24 @@
 
             document.getElementById('hero').style.display = 'none';
             document.getElementById('featuresSection').classList.add('hidden');
+            document.getElementById('homeBtn').style.display = 'block';
 
             const chatContainer = document.getElementById('chatContainer');
             chatContainer.classList.add('active');
+        }
+
+        // 返回首页
+        function resetChat() {
+            currentFeature = null;
+            isFirstMessage = true;
+
+            document.getElementById('main').classList.remove('has-chatted');
+            document.getElementById('hero').style.display = 'block';
+            document.getElementById('featuresSection').classList.remove('hidden');
+            document.getElementById('homeBtn').style.display = 'none';
+            document.getElementById('chatContainer').classList.remove('active');
+            document.getElementById('messages').innerHTML = '';
+            document.getElementById('userInput').value = '';
         }
 
         // 发送消息
