@@ -1,0 +1,12 @@
+{
+  "name": "biaoge-ip-assistant",
+  "version": "1.0.0",
+  "description": "彪哥IP内容助手",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

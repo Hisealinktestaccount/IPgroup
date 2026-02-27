@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彪哥IP内容助手</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #C9A962;
+            --primary-light: #E5D4A1;
+            --bg-dark: #0A0A0A;
+            --bg-card: #141414;
+            --bg-card-hover: #1A1A1A;
+            --text: #FFFFFF;
+            --text-muted: #8A8A8A;
+            --border: #2A2A2A;
+            --accent: #4A90A4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 背景 */
+        .bg-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-effect::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(201, 169, 98, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(74, 144, 164, 0.05) 0%, transparent 40%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-2%, 2%) rotate(1deg); }
+        }
+
+        /* 页面容器 */
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 240px;
+        }
+
+        /* 顶部 */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.98), transparent);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .logo-text {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        /* 主内容区 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 120px 20px 40px;
+            transition: all 0.5s ease;
+        }
+
+        main.has-chatted {
+            justify-content: flex-start;
+            padding-top: 100px;
+        }
+
+        /* 英雄区 */
+        .hero {
+            text-align: center;
+            max-width: 800px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(201, 169, 98, 0.1);
+            border: 1px solid rgba(201, 169, 98, 0.3);
+            border-radius: 30px;
+            font-size: 12px;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .hero-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .hero-title .highlight {
+            color: var(--primary);
+            position: relative;
+        }
+
+        .hero-title .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: rgba(201, 169, 98, 0.2);
+            z-index: -1;
+        }
+
+        .hero-desc {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        /* 功能选择 */
+        .features-bar {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            max-width: 900px;
+        }
+
+        .feature-tag {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-tag:hover {
+            background: rgba(201, 169, 98, 0.1);
+            border-color: var(--primary);
+            color: var(--text);
+            transform: translateY(-2px);
+        }
+
+        .feature-tag.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--bg-dark);
+            font-weight: 500;
+        }
+
+        .feature-tag .icon {
+            font-size: 16px;
+        }
+
+        /* 对话区 */
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            display: none;
+        }
+
+        .chat-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .messages {
+            max-height: 50vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+            max-width: 85%;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .message.bot .avatar {
+            background: linear-gradient(135deg, var(--primary), #8B7355);
+            color: var(--bg-dark);
+        }
+
+        .message.user .avatar {
+            background: linear-gradient(135deg, var(--accent), #2D5A6B);
+            color: white;
+        }
+
+        .bubble {
+            padding: 16px 20px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .message.bot .bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .bubble {
+            background: linear-gradient(135deg, var(--accent), #2D5A6B);
+            border-bottom-right-radius: 4px;
+        }
+
+        .bubble strong {
+            color: var(--primary);
+        }
+
+        .bubble .step {
+            display: block;
+            padding-left: 16px;
+            margin: 8px 0;
+        }
+
+        /* 输入区 */
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(10,10,10,0.98) 60%, transparent);
+            z-index: 100;
+        }
+
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 6px;
+            transition: all 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 4px 30px rgba(201, 169, 98, 0.15);
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 15px;
+            padding: 14px 18px;
+            font-family: inherit;
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-wrapper button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--bg-dark);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-wrapper button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(201, 169, 98, 0.4);
+        }
+
+        /* 结果卡片 */
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 16px;
+        }
+
+        .result-title {
+            font-size: 13px;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .result-content {
+            font-size: 14px;
+            line-height: 1.9;
+            white-space: pre-wrap;
+        }
+
+        .result-content .label {
+            color: var(--primary-light);
+            font-weight: 500;
+        }
+
+        /* 功能展示区 - 底部固定 */
+        .features-section {
+            position: fixed;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, var(--bg-dark) 80%, transparent);
+            padding: 30px 20px 20px;
+            z-index: 50;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        .features-section.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .features-title {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .features-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .feature-chip {
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            font-size: 13px;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-chip:hover {
+            background: rgba(201, 169, 98, 0.15);
+            border-color: var(--primary);
+            color: var(--text);
+            transform: translateY(-2px);
+        }
+
+        .feature-chip .icon {
+            font-size: 14px;
+        }
+
+        .feature-chip .num {
+            color: var(--primary);
+            margin-right: 4px;
+            font-weight: 500;
+        }
+
+        /* 加载动画 */
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .typing span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(1) { animation-delay: 0s; }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            header {
+                padding: 12px 20px;
+            }
+
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .hero-desc {
+                font-size: 14px;
+            }
+
+            .feature-tag {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+
+            .features-grid {
+                gap: 8px;
+            }
+
+            .feature-chip {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+
+            .page {
+                padding-bottom: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-effect"></div>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">彪</div>
+            <div class="logo-text">彪哥<span>IP</span></div>
+        </div>
+    </header>
+
+    <div class="page">
+        <main id="main">
+            <section class="hero" id="hero">
+                <div class="hero-badge">
+                    <span>✦</span>
+                    食安坚守者 · 内容创作助手
+                </div>
+                <h1 class="hero-title">
+                    用<span class="highlight">专业内容</span><br>守护中国食品安全
+                </h1>
+                <p class="hero-desc">
+                    告诉我您想做什么，我来帮您创作内容<br>
+                    支持采访策划、文案改写、语音合成等功能
+                </p>
+            </section>
+
+            <section class="chat-container" id="chatContainer">
+                <div class="messages" id="messages"></div>
+            </section>
+        </main>
+
+        <!-- 底部功能区 -->
+        <section class="features-section" id="featuresSection">
+            <div class="features-title">选择您要使用的功能</div>
+            <div class="features-grid">
+                <div class="feature-chip" onclick="quickSelect(1)"><span class="icon">🎙️</span><span class="num">01</span>采访策划</div>
+                <div class="feature-chip" onclick="quickSelect(2)"><span class="icon">📝</span><span class="num">02</span>内容改写</div>
+                <div class="feature-chip" onclick="quickSelect(3)"><span class="icon">💡</span><span class="num">03</span>标题扩展</div>
+                <div class="feature-chip" onclick="quickSelect(4)"><span class="icon">🔊</span><span class="num">04</span>语音合成</div>
+                <div class="feature-chip" onclick="quickSelect(5)"><span class="icon">📰</span><span class="num">05</span>选题推荐</div>
+                <div class="feature-chip" onclick="quickSelect(6)"><span class="icon">🎬</span><span class="num">06</span>素材推荐</div>
+            </div>
+        </section>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="输入您的需求，如：帮我策划一场采访..." autocomplete="off">
+                <button id="sendBtn" onclick="sendMessage()">↑</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFeature = null;
+        let isFirstMessage = true;
+
+        const featureNames = {
+            1: '采访策划',
+            2: '内容改写',
+            3: '标题扩展',
+            4: '语音合成',
+            5: '选题推荐',
+            6: '素材推荐'
+        };
+
+        const featurePrompts = {
+            1: '好的进入了采访策划模式。请提供采访对象的基本信息：主角是谁？入行多久了？产品是什么？',
+            2: '好的进入了内容改写模式。请提供一段新闻内容（包含产品/人物/痛点/核心冲突），我来帮您改写成口播文案。',
+            3: '好的进入了标题扩展模式。请提供标题和核心要点（可以附上背景信息、数据等），我来帮您扩展成完整的口播文案。',
+            4: '好的进入了语音合成模式。请提供需要转换成语音的文案内容。',
+            5: '好的进入了选题推荐模式。请告诉我您想做什么选题？比如："帮我推荐3月份的选题" 或 "最近有什么热点"',
+            6: '好的进入了素材推荐模式。请提供需要添加素材的口播文案，我来帮您分析并生成AI提示词。'
+        };
+
+        // 智能识别功能
+        function detectFeature(text) {
+            const keywords = {
+                1: ['采访', '访谈', '访问', '提问', '提纲'],
+                2: ['改写', '新闻', '文案', '梳理', '整理'],
+                3: ['标题', '扩展', '充实', '详细'],
+                4: ['语音', '配音', '朗读', '声音', 'TTS'],
+                5: ['选题', '话题', '热点', '推荐'],
+                6: ['素材', '图片', '视频', '提示词', 'AI']
+            };
+
+            for (const [feature, words] of Object.entries(keywords)) {
+                for (const word of words) {
+                    if (text.includes(word)) {
+                        return parseInt(feature);
+                    }
+                }
+            }
+            return null;
+        }
+
+        // 快速选择功能
+        function quickSelect(feature) {
+            currentFeature = feature;
+            document.getElementById('userInput').focus();
+
+            // 隐藏hero，进入对话模式
+            enterChatMode();
+
+            addMessage(`<strong>${featureNames[feature]}</strong>`, 'bot');
+            setTimeout(() => {
+                addMessage(featurePrompts[feature], 'bot');
+            }, 300);
+        }
+
+        // 进入对话模式
+        function enterChatMode() {
+            const main = document.getElementById('main');
+            main.classList.add('has-chatted');
+
+            document.getElementById('hero').style.display = 'none';
+            document.getElementById('featuresSection').classList.add('hidden');
+
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.classList.add('active');
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+
+            // 首次消息时隐藏hero
+            if (isFirstMessage) {
+                isFirstMessage = false;
+                enterChatMode();
+            }
+
+            // 显示思考中
+            const thinking = createThinking();
+            document.getElementById('messages').appendChild(thinking);
+            scrollToBottom();
+
+            // 智能识别功能
+            if (!currentFeature) {
+                const detected = detectFeature(text);
+                if (detected) {
+                    currentFeature = detected;
+                }
+            }
+
+            // 构建消息历史
+            const messages = [];
+            document.querySelectorAll('.message').forEach(msg => {
+                const avatar = msg.querySelector('.avatar').textContent;
+                const content = msg.querySelector('.bubble').innerHTML
+                    .replace(/<[^>]*>/g, ' ')  // 移除HTML标签
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (avatar === '我') {
+                    messages.push({ role: 'user', content: content });
+                } else if (avatar === '彪' && content) {
+                    messages.push({ role: 'assistant', content: content });
+                }
+            });
+
+            // 发送消息到后端API
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        feature: currentFeature
+                    })
+                });
+
+                const data = await response.json();
+                thinking.remove();
+
+                if (data.error) {
+                    addMessage(`抱歉，出了点问题：${data.error}`, 'bot');
+                } else {
+                    addMessage(data.content, 'bot');
+                }
+            } catch (error) {
+                thinking.remove();
+                addMessage('网络错误，请稍后重试', 'bot');
+            }
+        }
+
+        function addMessage(html, type) {
+            const messages = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = `
+                <div class="avatar">${type === 'user' ? '我' : '彪'}</div>
+                <div class="bubble">${html}</div>
+            `;
+            messages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function createThinking() {
+            const div = document.createElement('div');
+            div.className = 'message bot';
+            div.innerHTML = `
+                <div class="avatar">彪</div>
+                <div class="bubble">
+                    <div class="typing">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function scrollToBottom() {
+            const messages = document.getElementById('messages');
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // 处理响应
+        function processResponse(userText) {
+            let feature = currentFeature ? featureNames[currentFeature] : '内容创作';
+
+            // 如果没有识别到功能，给出引导
+            if (!currentFeature) {
+                addMessage('我明白了！为了更好地帮您创作，请您告诉我更具体的需求，或者点击下方功能卡片直接开始。', 'bot');
+                return;
+            }
+
+            let resultContent = '';
+
+            switch(currentFeature) {
+                case 1:
+                    resultContent = `<span class="label">采访对象：</span>${userText}\n\n请补充更多信息，我将为您生成完整的采访提纲。`;
+                    break;
+                case 2:
+                    resultContent = `<span class="label">原文要点：</span>${userText.substring(0, 150)}...\n\n正在为您改写成彪哥IP风格的的口播文案...`;
+                    break;
+                case 3:
+                    resultContent = `<span class="label">核心要点：</span>${userText}\n\n正在为您扩展成完整的口播文案...`;
+                    break;
+                case 4:
+                    resultContent = `<span class="label">文案内容：</span>${userText.substring(0, 100)}...\n\n正在使用彪哥克隆声音生成语音...`;
+                    break;
+                case 5:
+                    resultContent = `<span class="label">选题方向：</span>${userText}\n\n正在为您搜索相关热点并推荐选题...`;
+                    break;
+                case 6:
+                    resultContent = `<span class="label">文案内容：</span>${userText.substring(0, 100)}...\n\n正在分析素材需求并生成AI提示词...`;
+                    break;
+            }
+
+            addMessage(`好的！我来帮您进行 <strong>${feature}</strong>`, 'bot');
+
+            // 显示结果卡片
+            const messages = document.getElementById('messages');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-card';
+            resultDiv.innerHTML = `
+                <div class="result-title">✦ ${feature}结果</div>
+                <div class="result-content">${resultContent}</div>
+            `;
+            messages.appendChild(resultDiv);
+            scrollToBottom();
+        }
+
+        // 回车发送
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
