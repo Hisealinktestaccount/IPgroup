@@ -805,10 +805,16 @@
             // 隐藏hero，进入对话模式
             enterChatMode();
 
-            addMessage(`<strong>${featureNames[feature]}</strong>`, 'bot');
-            setTimeout(() => {
-                addMessage(featurePrompts[feature], 'bot');
-            }, 300);
+            // 用卡片形式显示功能提示
+            const messages = document.getElementById('messages');
+            const featureCard = document.createElement('div');
+            featureCard.className = 'result-card';
+            featureCard.innerHTML = `
+                <div class="result-title">✦ ${featureNames[feature]}</div>
+                <div class="result-content">${featurePrompts[feature]}</div>
+            `;
+            messages.appendChild(featureCard);
+            scrollToBottom();
         }
 
         // 进入对话模式
@@ -905,14 +911,14 @@
                 thinking.remove();
 
                 if (data.error) {
-                    addMessage(`抱歉，出了点问题：${data.error}`, 'bot');
+                    showResultCard(`抱歉，出了点问题：${data.error}`);
                 } else {
                     // 用卡片形式展示结果
                     showResultCard(data.content);
                 }
             } catch (error) {
                 thinking.remove();
-                addMessage('网络错误，请稍后重试', 'bot');
+                showResultCard('网络错误，请稍后重试');
             }
         }
 
@@ -991,24 +997,36 @@
             `;
         }
 
-        // 延展操作
+        // 延展操作 - 切换到新功能
         function extendAction(feature) {
-            currentFeature = feature;
             const featureText = featureNames[feature];
-            addMessage(`好的，来进行${featureText}`, 'user');
+            const featurePrompt = featurePrompts[feature];
 
-            // 显示新功能的提示
+            // 更新当前功能
+            currentFeature = feature;
+
+            // 隐藏之前的操作区
+            document.querySelectorAll('.action-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.modify-section').forEach(el => el.style.display = 'none');
+
+            // 显示新功能提示卡片
             const messages = document.getElementById('messages');
             const promptDiv = document.createElement('div');
             promptDiv.className = 'result-card';
             promptDiv.innerHTML = `
-                <div class="result-title">✦ ${featureText}</div>
-                <div class="result-content">${featurePrompts[feature]}</div>
+                <div class="result-title">✦ 切换到${featureText}</div>
+                <div class="result-content">${featurePrompt}</div>
             `;
             messages.appendChild(promptDiv);
             scrollToBottom();
 
-            document.getElementById('userInput').focus();
+            // 清空输入框并聚焦，让用户输入新内容
+            const input = document.getElementById('userInput');
+            input.value = '';
+            input.focus();
+
+            // 滚动到底部
+            setTimeout(() => scrollToBottom(), 100);
         }
 
         // 显示修改输入框
@@ -1110,7 +1128,7 @@
                 }
             } catch (error) {
                 thinking.remove();
-                addMessage('网络错误，请稍后重试', 'bot');
+                showResultCard('网络错误，请稍后重试');
             }
         }
 
