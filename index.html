@@ -968,36 +968,94 @@
             `;
         }
 
-        // 延展操作 - 切换到新功能
-        function extendAction(feature) {
+        // 延展操作 - 自动使用之前的内容
+        async function extendAction(feature) {
             const featureText = featureNames[feature];
-            const featurePrompt = featurePrompts[feature];
 
-            // 更新当前功能
-            currentFeature = feature;
+            // 获取最后一个卡片的内容作为上下文
+            const cards = document.querySelectorAll('.result-card');
+            let previousContent = '';
+            if (cards.length > 0) {
+                const lastCard = cards[cards.length - 1];
+                previousContent = lastCard.querySelector('.result-content')?.innerText || '';
+            }
+
+            if (!previousContent) {
+                alert('请先生成内容后再进行延展操作');
+                return;
+            }
 
             // 隐藏之前的操作区
             document.querySelectorAll('.action-section').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.modify-section').forEach(el => el.style.display = 'none');
 
-            // 显示新功能提示卡片
+            // 显示正在处理
             const messages = document.getElementById('messages');
-            const promptDiv = document.createElement('div');
-            promptDiv.className = 'result-card';
-            promptDiv.innerHTML = `
-                <div class="result-title">✦ 切换到${featureText}</div>
-                <div class="result-content">${featurePrompt}</div>
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message bot';
+            thinkingDiv.innerHTML = `
+                <div class="avatar">彪</div>
+                <div class="bubble">
+                    <div class="typing"><span></span><span></span><span></span></div>
+                </div>
             `;
-            messages.appendChild(promptDiv);
+            messages.appendChild(thinkingDiv);
             scrollToBottom();
 
-            // 清空输入框并聚焦，让用户输入新内容
-            const input = document.getElementById('userInput');
-            input.value = '';
-            input.focus();
+            // 更新当前功能
+            currentFeature = feature;
 
-            // 滚动到底部
-            setTimeout(() => scrollToBottom(), 100);
+            // 构建消息历史，包含之前的内容作为上下文
+            const apiMessages = [];
+            document.querySelectorAll('.message').forEach(msg => {
+                const avatarEl = msg.querySelector('.avatar');
+                const bubbleEl = msg.querySelector('.bubble');
+                if (!bubbleEl) return;
+
+                const avatar = avatarEl ? avatarEl.textContent : '';
+                const content = bubbleEl.innerText.trim();
+                if (!content) return;
+
+                if (msg.classList.contains('user')) {
+                    apiMessages.push({ role: 'user', content: content });
+                } else if (avatar === '彪') {
+                    apiMessages.push({ role: 'assistant', content: content });
+                }
+            });
+
+            // 添加当前延展请求
+            let requestText = '';
+            if (feature === 7) {
+                // 生成评论
+                requestText = `请为以下文案生成评论区评论：\n\n${previousContent}`;
+            } else if (feature === 6) {
+                // AI提示词
+                requestText = `请为以下文案生成AI画面提示词：\n\n${previousContent}`;
+            }
+            apiMessages.push({ role: 'user', content: requestText });
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: apiMessages,
+                        feature: feature
+                    })
+                });
+
+                const data = await response.json();
+                thinkingDiv.remove();
+
+                if (data.error) {
+                    showResultCard(`抱歉，出了点问题：${data.error}`);
+                } else {
+                    showResultCard(data.content);
+                }
+            } catch (error) {
+                thinkingDiv.remove();
+                showResultCard('网络错误，请稍后重试');
+            }
         }
 
         // 显示修改输入框
