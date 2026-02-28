@@ -294,10 +294,26 @@
             max-width: 85%;
         }
 
+        /* 用户消息样式 - 简化版 */
         .message.user {
             align-self: flex-end;
-            flex-direction: row-reverse;
             max-width: 85%;
+            margin-bottom: 8px;
+        }
+
+        .message.user .bubble {
+            background: rgba(74, 144, 164, 0.2);
+            border: 1px solid rgba(74, 144, 164, 0.3);
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-right-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .message.user .avatar {
+            display: none;
         }
 
         .avatar {
@@ -413,13 +429,20 @@
             box-shadow: 0 4px 20px rgba(201, 169, 98, 0.4);
         }
 
-        /* 结果卡片 */
+        /* 结果卡片 - 主要展示形式 */
         .result-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 24px;
+            padding: 28px;
             margin-top: 16px;
+            width: 100%;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .result-title {
@@ -433,14 +456,119 @@
         }
 
         .result-content {
-            font-size: 14px;
+            font-size: 15px;
             line-height: 1.9;
             white-space: pre-wrap;
+            color: var(--text);
         }
 
         .result-content .label {
             color: var(--primary-light);
             font-weight: 500;
+        }
+
+        /* 延展操作区 */
+        .action-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .action-question {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 18px;
+            background: rgba(201, 169, 98, 0.1);
+            border: 1px solid rgba(201, 169, 98, 0.3);
+            border-radius: 25px;
+            font-size: 13px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.secondary {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--text-muted);
+            color: var(--text);
+        }
+
+        /* 修改建议区 */
+        .modify-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(74, 144, 164, 0.1);
+            border: 1px solid rgba(74, 144, 164, 0.2);
+            border-radius: 12px;
+        }
+
+        .modify-question {
+            font-size: 13px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modify-input {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .modify-input input {
+            flex: 1;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .modify-input input:focus {
+            border-color: var(--accent);
+        }
+
+        .modify-input button {
+            padding: 10px 20px;
+            background: var(--accent);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modify-input button:hover {
+            transform: scale(1.05);
         }
 
         /* 功能展示区 - 底部固定 */
@@ -643,6 +771,11 @@
             6: '好的进入了素材推荐模式。请提供需要添加素材的口播文案，我来帮您分析并生成AI提示词。'
         };
 
+        // ===== API 配置 =====
+        // 腾讯云函数部署后，填写这里的API地址
+        // 例如：https://service-xxx-xxx.sh.tencentcs.com/release/函数名
+        const API_URL = '/api/chat';  // 本地开发或Vercel用这个
+
         // 智能识别功能
         function detectFeature(text) {
             const keywords = {
@@ -736,21 +869,28 @@
             // 构建消息历史
             const messages = [];
             document.querySelectorAll('.message').forEach(msg => {
-                const avatar = msg.querySelector('.avatar').textContent;
-                const content = msg.querySelector('.bubble').innerHTML
+                const avatarEl = msg.querySelector('.avatar');
+                const bubbleEl = msg.querySelector('.bubble');
+                if (!bubbleEl) return;
+
+                const avatar = avatarEl ? avatarEl.textContent : '';
+                const content = bubbleEl.innerHTML
                     .replace(/<[^>]*>/g, ' ')  // 移除HTML标签
                     .replace(/\s+/g, ' ')
                     .trim();
-                if (avatar === '我') {
+
+                if (!content) return;
+
+                if (msg.classList.contains('user') || avatar === '我') {
                     messages.push({ role: 'user', content: content });
-                } else if (avatar === '彪' && content) {
+                } else if (msg.classList.contains('bot') || avatar === '彪') {
                     messages.push({ role: 'assistant', content: content });
                 }
             });
 
             // 发送消息到后端API
             try {
-                const response = await fetch('/api/chat', {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -767,7 +907,206 @@
                 if (data.error) {
                     addMessage(`抱歉，出了点问题：${data.error}`, 'bot');
                 } else {
-                    addMessage(data.content, 'bot');
+                    // 用卡片形式展示结果
+                    showResultCard(data.content);
+                }
+            } catch (error) {
+                thinking.remove();
+                addMessage('网络错误，请稍后重试', 'bot');
+            }
+        }
+
+        // 用卡片形式展示结果
+        function showResultCard(content) {
+            const messages = document.getElementById('messages');
+
+            const feature = currentFeature ? featureNames[currentFeature] : '内容创作';
+
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-card';
+            resultDiv.innerHTML = `
+                <div class="result-title">✦ ${feature}结果</div>
+                <div class="result-content">${content}</div>
+                ${getActionSection()}
+            `;
+            messages.appendChild(resultDiv);
+            scrollToBottom();
+        }
+
+        // 根据当前功能获取延展操作区
+        function getActionSection() {
+            let actions = [];
+
+            switch(currentFeature) {
+                case 1: // 采访策划
+                    actions = [
+                        { label: '生成采访提纲', feature: 1, icon: '📋' },
+                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' }
+                    ];
+                    break;
+                case 2: // 内容改写
+                    actions = [
+                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' },
+                        { label: '生成语音', feature: 4, icon: '🔊' }
+                    ];
+                    break;
+                case 3: // 标题扩展
+                    actions = [
+                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' },
+                        { label: '生成语音', feature: 4, icon: '🔊' }
+                    ];
+                    break;
+                case 4: // 语音合成
+                    actions = [
+                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' }
+                    ];
+                    break;
+                case 5: // 选题推荐
+                    actions = [
+                        { label: '扩展选题内容', feature: 3, icon: '📝' },
+                        { label: '生成采访策划', feature: 1, icon: '📋' }
+                    ];
+                    break;
+                case 6: // 素材推荐
+                    actions = [
+                        { label: '生成语音', feature: 4, icon: '🔊' }
+                    ];
+                    break;
+            }
+
+            if (actions.length === 0) return '';
+
+            const buttonsHtml = actions.map(a =>
+                `<button class="action-btn" onclick="extendAction(${a.feature})">${a.icon} ${a.label}</button>`
+            ).join('');
+
+            return `
+                <div class="action-section">
+                    <div class="action-question">您还可以：</div>
+                    <div class="action-buttons">
+                        ${buttonsHtml}
+                        <button class="action-btn secondary" onclick="showModifyInput(this)">✏️ 修改内容</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 延展操作
+        function extendAction(feature) {
+            currentFeature = feature;
+            const featureText = featureNames[feature];
+            addMessage(`好的，来进行${featureText}`, 'user');
+
+            // 显示新功能的提示
+            const messages = document.getElementById('messages');
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'result-card';
+            promptDiv.innerHTML = `
+                <div class="result-title">✦ ${featureText}</div>
+                <div class="result-content">${featurePrompts[feature]}</div>
+            `;
+            messages.appendChild(promptDiv);
+            scrollToBottom();
+
+            document.getElementById('userInput').focus();
+        }
+
+        // 显示修改输入框
+        function showModifyInput(btn) {
+            const actionSection = btn.closest('.action-section');
+            if (actionSection.querySelector('.modify-section')) return;
+
+            const modifyDiv = document.createElement('div');
+            modifyDiv.className = 'modify-section';
+            modifyDiv.innerHTML = `
+                <div class="modify-question">💬 您希望如何修改？</div>
+                <div class="modify-input">
+                    <input type="text" id="modifyText" placeholder="例如：语言更口语化一些..." autocomplete="off">
+                    <button onclick="submitModify()">提交</button>
+                </div>
+            `;
+            actionSection.appendChild(modifyDiv);
+            modifyDiv.querySelector('input').focus();
+
+            // 回车提交
+            modifyDiv.querySelector('input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitModify();
+            });
+        }
+
+        // 提交修改
+        async function submitModify() {
+            const input = document.getElementById('modifyText');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // 获取当前结果内容
+            const currentResult = document.querySelector('.result-card:last-child .result-content');
+            const originalContent = currentResult ? currentResult.innerHTML : '';
+
+            addMessage(`修改建议：${text}`, 'user');
+
+            // 移除之前的修改区域
+            const modifySection = document.querySelector('.modify-section');
+            if (modifySection) modifySection.remove();
+
+            // 显示思考中
+            const thinking = createThinking();
+            document.getElementById('messages').appendChild(thinking);
+            scrollToBottom();
+
+            // 构建消息历史
+            const messages = [];
+            document.querySelectorAll('.message').forEach(msg => {
+                const avatar = msg.querySelector('.avatar')?.textContent;
+                const content = msg.querySelector('.bubble')?.innerHTML
+                    ?.replace(/<[^>]*>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (avatar === '我' && content) {
+                    messages.push({ role: 'user', content: content });
+                }
+            });
+
+            // 添加原始内容和修改要求
+            const lastUserMsg = messages[messages.length - 1];
+            if (lastUserMsg && lastUserMsg.content.startsWith('修改建议：')) {
+                // 这是修改请求，需要把前一条assistant的内容作为上下文
+                messages.push({
+                    role: 'user',
+                    content: `请根据以下要求修改以上内容：${text}`
+                });
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: messages,
+                        feature: currentFeature,
+                        isModify: true
+                    })
+                });
+
+                const data = await response.json();
+                thinking.remove();
+
+                if (data.error) {
+                    addMessage(`抱歉，出了点问题：${data.error}`, 'bot');
+                } else {
+                    // 替换原来的结果卡片
+                    const oldCard = document.querySelector('.result-card:last-child');
+                    if (oldCard) {
+                        const feature = currentFeature ? featureNames[currentFeature] : '内容创作';
+                        oldCard.innerHTML = `
+                            <div class="result-title">✦ ${feature}结果（已修改）</div>
+                            <div class="result-content">${data.content}</div>
+                            ${getActionSection()}
+                        `;
+                    } else {
+                        showResultCard(data.content);
+                    }
                 }
             } catch (error) {
                 thinking.remove();
@@ -778,11 +1117,18 @@
         function addMessage(html, type) {
             const messages = document.getElementById('messages');
             const div = document.createElement('div');
-            div.className = `message ${type}`;
-            div.innerHTML = `
-                <div class="avatar">${type === 'user' ? '我' : '彪'}</div>
-                <div class="bubble">${html}</div>
-            `;
+            if (type === 'user') {
+                // 用户消息简化显示
+                div.className = `message ${type}`;
+                div.innerHTML = `<div class="bubble">${html}</div>`;
+            } else {
+                // 机器人消息保留头像
+                div.className = `message ${type}`;
+                div.innerHTML = `
+                    <div class="avatar">彪</div>
+                    <div class="bubble">${html}</div>
+                `;
+            }
             messages.appendChild(div);
             scrollToBottom();
         }
@@ -798,6 +1144,7 @@
                     </div>
                 </div>
             `;
+            div.style.marginBottom = '10px';
             return div;
         }
 
