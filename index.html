@@ -506,6 +506,19 @@
             transform: translateY(-2px);
         }
 
+        /* 主要操作按钮 - 更醒目 */
+        .action-btn.highlight-btn {
+            background: linear-gradient(135deg, var(--primary), #D4B76A);
+            border-color: var(--primary);
+            color: var(--bg-dark);
+            font-weight: 500;
+            padding: 12px 24px;
+        }
+
+        .action-btn.highlight-btn:hover {
+            box-shadow: 0 4px 20px rgba(201, 169, 98, 0.4);
+        }
+
         .action-btn.secondary {
             background: transparent;
             border-color: var(--border);
@@ -738,6 +751,7 @@
                 <div class="feature-chip" onclick="quickSelect(4)"><span class="icon">🔊</span><span class="num">04</span>语音合成</div>
                 <div class="feature-chip" onclick="quickSelect(5)"><span class="icon">📰</span><span class="num">05</span>选题推荐</div>
                 <div class="feature-chip" onclick="quickSelect(6)"><span class="icon">🎬</span><span class="num">06</span>素材推荐</div>
+                <div class="feature-chip" onclick="quickSelect(7)"><span class="icon">💬</span><span class="num">07</span>评论区运营</div>
             </div>
         </section>
 
@@ -759,7 +773,8 @@
             3: '标题扩展',
             4: '语音合成',
             5: '选题推荐',
-            6: '素材推荐'
+            6: '素材推荐',
+            7: '评论区运营'
         };
 
         const featurePrompts = {
@@ -768,7 +783,8 @@
             3: '好的进入了标题扩展模式。请提供标题和核心要点（可以附上背景信息、数据等），我来帮您扩展成完整的口播文案。',
             4: '好的进入了语音合成模式。请提供需要转换成语音的文案内容。',
             5: '好的进入了选题推荐模式。请告诉我您想做什么选题？比如："帮我推荐3月份的选题" 或 "最近有什么热点"',
-            6: '好的进入了素材推荐模式。请提供需要添加素材的口播文案，我来帮您分析并生成AI提示词。'
+            6: '好的进入了素材推荐模式。请提供需要添加素材的口播文案，我来帮您分析并生成AI提示词。',
+            7: '好的进入了评论区运营模式。请提供需要生成评论的文案内容。'
         };
 
         // ===== API 配置 =====
@@ -939,59 +955,14 @@
             scrollToBottom();
         }
 
-        // 根据当前功能获取延展操作区
+        // 统一的延展操作区 - 3个固定按钮
         function getActionSection() {
-            let actions = [];
-
-            switch(currentFeature) {
-                case 1: // 采访策划
-                    actions = [
-                        { label: '生成采访提纲', feature: 1, icon: '📋' },
-                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' }
-                    ];
-                    break;
-                case 2: // 内容改写
-                    actions = [
-                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' },
-                        { label: '生成语音', feature: 4, icon: '🔊' }
-                    ];
-                    break;
-                case 3: // 标题扩展
-                    actions = [
-                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' },
-                        { label: '生成语音', feature: 4, icon: '🔊' }
-                    ];
-                    break;
-                case 4: // 语音合成
-                    actions = [
-                        { label: '生成AI画面提示词', feature: 6, icon: '🖼️' }
-                    ];
-                    break;
-                case 5: // 选题推荐
-                    actions = [
-                        { label: '扩展选题内容', feature: 3, icon: '📝' },
-                        { label: '生成采访策划', feature: 1, icon: '📋' }
-                    ];
-                    break;
-                case 6: // 素材推荐
-                    actions = [
-                        { label: '生成语音', feature: 4, icon: '🔊' }
-                    ];
-                    break;
-            }
-
-            if (actions.length === 0) return '';
-
-            const buttonsHtml = actions.map(a =>
-                `<button class="action-btn" onclick="extendAction(${a.feature})">${a.icon} ${a.label}</button>`
-            ).join('');
-
             return `
                 <div class="action-section">
-                    <div class="action-question">您还可以：</div>
                     <div class="action-buttons">
-                        ${buttonsHtml}
-                        <button class="action-btn secondary" onclick="showModifyInput(this)">✏️ 修改内容</button>
+                        <button class="action-btn highlight-btn" onclick="extendAction(7)">💬 生成评论</button>
+                        <button class="action-btn highlight-btn" onclick="extendAction(6)">🖼️ AI提示词</button>
+                        <button class="action-btn secondary" onclick="showModifyInput(this)">✏️ 重新修改</button>
                     </div>
                 </div>
             `;

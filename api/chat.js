@@ -88,7 +88,8 @@ function getSkillContent(feature) {
     3: '3-expand.md',
     4: '4-tts.md',
     5: '5-topic.md',
-    6: '6-visual.md'
+    6: '6-visual.md',
+    7: '7-comment.md'
   };
 
   const filename = skillFiles[feature];
